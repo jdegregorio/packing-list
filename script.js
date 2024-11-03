@@ -2,12 +2,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const packingListContainer = document.getElementById('packing-list-container');
     const addCategoryButton = document.getElementById('add-category-button');
     const resetButton = document.getElementById('reset-button');
-    const categoryModal = new bootstrap.Modal(document.getElementById('category-modal'));
+    const categoryModal = document.getElementById('category-modal');
+    const closeCategoryModalButtons = document.querySelectorAll('.close-button');
     const saveCategoryButton = document.getElementById('save-category-button');
     const newCategoryInput = document.getElementById('new-category-input');
-    const themeToggleButton = document.getElementById('theme-toggle');
-    const sunIcon = `<i class="bi bi-sun-fill"></i>`;
-    const moonIcon = `<i class="bi bi-moon-fill"></i>`;
 
     // Comprehensive default items for a family with children
     const defaultItems = [
@@ -68,68 +66,50 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize categories in the DOM
     function initializeCategories() {
         packingListContainer.innerHTML = '';
-        categories.forEach((category, index) => {
-            const categoryId = `category-${index}`;
+        categories.forEach(category => {
             const categoryDiv = document.createElement('div');
-            categoryDiv.className = 'accordion-item';
+            categoryDiv.className = 'category';
             categoryDiv.dataset.category = category;
 
-            const categoryHeader = document.createElement('h2');
-            categoryHeader.className = 'accordion-header';
-            categoryHeader.id={`heading-${categoryId}`;
+            const categoryHeader = document.createElement('div');
+            categoryHeader.className = 'category-header';
 
-            const categoryButton = document.createElement('button');
-            categoryButton.className = 'accordion-button collapsed';
-            categoryButton.type = 'button';
-            categoryButton.setAttribute('data-bs-toggle', 'collapse');
-            categoryButton.setAttribute('data-bs-target', `#collapse-${categoryId}`);
-            categoryButton.setAttribute('aria-expanded', 'false');
-            categoryButton.setAttribute('aria-controls', `collapse-${categoryId}`);
-            categoryButton.innerHTML = `
-                <span class="me-auto category-name">${category}</span>
-                <span>
-                    <button class="btn btn-sm btn-danger delete-category" title="Delete Category">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </span>
-            `;
-            categoryButton.addEventListener('dblclick', (e) => {
-                e.stopPropagation();
-                enableCategoryEditing(categoryButton.querySelector('.category-name'), category);
-            });
+            const categoryName = document.createElement('span');
+            categoryName.className = 'category-name';
+            categoryName.textContent = category;
+            categoryName.addEventListener('dblclick', () => enableCategoryEditing(categoryName, category));
 
-            const categoryCollapse = document.createElement('div');
-            categoryCollapse.id = `collapse-${categoryId}`;
-            categoryCollapse.className = 'accordion-collapse collapse';
-            categoryCollapse.setAttribute('aria-labelledby', `heading-${categoryId}`);
-            categoryCollapse.setAttribute('data-bs-parent', '#packing-list-container');
+            const deleteCategoryButton = document.createElement('button');
+            deleteCategoryButton.className = 'delete-category';
+            deleteCategoryButton.innerHTML = '&times;';
+            deleteCategoryButton.title = 'Delete Category';
+            deleteCategoryButton.addEventListener('click', () => deleteCategory(category));
 
-            const categoryBody = document.createElement('div');
-            categoryBody.className = 'accordion-body';
+            categoryHeader.appendChild(categoryName);
+            categoryHeader.appendChild(deleteCategoryButton);
 
-            const itemList = document.createElement('ul');
-            itemList.className = 'list-group';
-            itemList.dataset.category = category;
+            const list = document.createElement('ul');
+            list.className = 'sortable-list';
+            list.dataset.category = category;
 
+            // Add items to the list
             const categoryItems = items.filter(item => item.category === category);
             categoryItems.forEach(item => {
                 const listItem = createListItem(item);
-                itemList.appendChild(listItem);
+                list.appendChild(listItem);
             });
 
-            // Add Item Button
-            const addItemButton = document.createElement('button');
-            addItemButton.className = 'btn btn-sm btn-success mt-3';
-            addItemButton.innerHTML = `<i class="bi bi-plus-circle"></i> Add Item`;
+            // Add "Add item" button
+            const addItemButton = document.createElement('div');
+            addItemButton.className = 'add-item-button';
+            addItemButton.innerHTML = '+';
+            addItemButton.title = 'Add Item';
             addItemButton.addEventListener('click', () => addItemToCategory(category));
 
-            categoryBody.appendChild(itemList);
-            categoryBody.appendChild(addItemButton);
-
-            categoryCollapse.appendChild(categoryBody);
-            categoryHeader.appendChild(categoryButton);
             categoryDiv.appendChild(categoryHeader);
-            categoryDiv.appendChild(categoryCollapse);
+            categoryDiv.appendChild(list);
+            categoryDiv.appendChild(addItemButton);
+
             packingListContainer.appendChild(categoryDiv);
         });
     }
@@ -137,22 +117,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Create a list item element
     function createListItem(item) {
         const listItem = document.createElement('li');
-        listItem.className = 'list-group-item d-flex align-items-center';
+        listItem.className = 'list-item';
         listItem.dataset.id = item.id;
 
         const dragHandle = document.createElement('span');
-        dragHandle.className = 'drag-handle me-3 text-secondary';
-        dragHandle.innerHTML = `<i class="bi bi-grip-vertical"></i>`;
+        dragHandle.className = 'drag-handle';
+        dragHandle.innerHTML = '&#9776;'; // Hamburger icon
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        checkbox.className = 'form-check-input me-2';
         checkbox.checked = item.checked;
         checkbox.addEventListener('change', () => toggleItemChecked(item.id));
 
-        const label = document.createElement('span');
-        label.className = 'flex-grow-1';
+        const label = document.createElement('label');
         label.textContent = item.name;
+        label.className = 'editable';
         label.addEventListener('dblclick', () => enableItemEditing(label, item));
 
         listItem.appendChild(dragHandle);
@@ -170,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize SortableJS for all lists
     function initializeSortable() {
-        const sortableLists = document.querySelectorAll('.list-group');
+        const sortableLists = document.querySelectorAll('.sortable-list');
         sortableLists.forEach(list => {
             if (list.sortableInitialized) return; // Prevent initializing multiple times
 
@@ -178,11 +157,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 group: 'shared',
                 animation: 150,
                 handle: '.drag-handle',
-                ghostClass: 'bg-light bg-opacity-50',
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
                 onEnd: function(evt) {
                     const itemId = evt.item.dataset.id;
-                    const newCategory = evt.to.closest('.accordion-collapse').previousElementSibling.querySelector('.accordion-button .category-name').textContent;
-                    const oldCategory = items.find(it => it.id === itemId).category;
+                    const newCategory = evt.to.dataset.category;
+                    const oldCategory = evt.from.dataset.category;
 
                     if (newCategory !== oldCategory) {
                         const item = items.find(it => it.id === itemId);
@@ -193,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     // Reorder items within the new category
-                    const newListItems = Array.from(evt.to.children).filter(child => child.classList.contains('list-group-item'));
+                    const newListItems = Array.from(evt.to.children).filter(child => child.classList.contains('list-item'));
                     const updatedCategoryItems = newListItems.map(child => {
                         const id = child.dataset.id;
                         return items.find(it => it.id === id);
@@ -228,7 +209,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add a new category via modal
     function openAddCategoryModal() {
-        categoryModal.show();
+        categoryModal.style.display = 'block';
+        newCategoryInput.value = '';
+        newCategoryInput.focus();
+    }
+
+    // Close modals
+    function closeModals() {
+        categoryModal.style.display = 'none';
     }
 
     // Save new category
@@ -238,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
             categories.push(newCategory);
             updateLocalStorage();
             renderList();
-            categoryModal.hide();
+            categoryModal.style.display = 'none';
         } else {
             alert('Category name is empty or already exists.');
         }
@@ -261,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const input = document.createElement('input');
         input.type = 'text';
         input.value = currentText;
-        input.className = 'form-control form-control-sm';
+        input.className = 'edit-input';
         label.replaceWith(input);
         input.focus();
 
@@ -287,13 +275,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Enable inline editing for categories
-    function enableCategoryEditing(nameElement, category) {
-        const currentName = nameElement.textContent;
+    function enableCategoryEditing(span, category) {
+        const currentName = span.textContent;
         const input = document.createElement('input');
         input.type = 'text';
         input.value = currentName;
-        input.className = 'form-control form-control-sm';
-        nameElement.replaceWith(input);
+        input.className = 'edit-input';
+        span.replaceWith(input);
         input.focus();
 
         input.addEventListener('blur', () => saveCategoryEditing(input, category));
@@ -328,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function resetToDefault() {
         const confirmReset = confirm('Are you sure you want to reset the packing list to its default state? This will delete all your current items and categories.');
         if (confirmReset) {
-            items = JSON.parse(JSON.stringify(defaultItems)); // Deep copy to avoid reference issues
+            items = defaultItems;
             categories = [...new Set(items.map(item => item.category))];
             updateLocalStorage();
             renderList();
@@ -345,41 +333,23 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('packingList', JSON.stringify(items));
     }
 
-    // Theme Toggle
-    function toggleTheme() {
-        document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        updateThemeIcon(isDark);
-    }
-
-    function updateThemeIcon(isDark) {
-        if (isDark) {
-            themeToggleButton.innerHTML = moonIcon;
-        } else {
-            themeToggleButton.innerHTML = sunIcon;
-        }
-    }
-
-    function loadTheme() {
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            updateThemeIcon(true);
-        } else {
-            document.body.classList.remove('dark-mode');
-            updateThemeIcon(false);
-        }
-    }
-
     // Event Listeners
     addCategoryButton.addEventListener('click', openAddCategoryModal);
-    saveCategoryButton.addEventListener('click', saveNewCategory);
-    resetButton.addEventListener('click', resetToDefault);
-    themeToggleButton.addEventListener('click', toggleTheme);
 
-    // Close modals when clicking outside (optional, handled by Bootstrap)
+    closeCategoryModalButtons.forEach(button => {
+        button.addEventListener('click', closeModals);
+    });
+
+    window.addEventListener('click', function(event) {
+        if (event.target === categoryModal) {
+            closeModals();
+        }
+    });
+
+    saveCategoryButton.addEventListener('click', saveNewCategory);
+
+    resetButton.addEventListener('click', resetToDefault);
+
     // Initialize the list on load
     renderList();
-    loadTheme();
 });
