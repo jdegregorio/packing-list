@@ -4,63 +4,62 @@
     <meta charset="UTF-8">
     <title>Packing List App</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Tailwind CSS CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
     <!-- Manifest for PWA -->
     <link rel="manifest" href="manifest.json">
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-300">
-    <div class="max-w-4xl mx-auto p-4">
-        <header class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-semibold">Packing List</h1>
-            <button id="theme-toggle" class="text-gray-600 dark:text-gray-300 focus:outline-none">
-                <!-- Sun and Moon Icons -->
-                <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8.66-8.66h-1M4.34 12h-1m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.02-12.02l-.707.707M6.343 6.343l-.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
-                </svg>
-                <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
-                </svg>
-            </button>
-        </header>
+<body class="bg-light">
+    <div class="container my-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="text-primary">Packing List</h1>
+            <div>
+                <button id="theme-toggle" class="btn btn-outline-secondary me-2" title="Toggle Dark Mode">
+                    <i class="bi bi-moon-fill"></i>
+                </button>
+                <button id="reset-button" class="btn btn-danger" title="Reset to Default">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                </button>
+            </div>
+        </div>
 
-        <div id="packing-list-container" class="space-y-8">
+        <div id="packing-list-container" class="accordion" >
             <!-- Categories will be dynamically inserted here -->
         </div>
 
-        <div class="flex justify-between mt-6">
-            <button id="add-category-button" class="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Add Category
-            </button>
-            <button id="reset-button" class="flex items-center px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 0A8.001 8.001 0 0012 20.01a8 8 0 100-16 8.001 8.001 0 005.938 7.207" />
-                </svg>
-                Reset to Default
+        <div class="mt-4">
+            <button id="add-category-button" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Add Category
             </button>
         </div>
     </div>
 
-    <!-- Modal for adding a new category -->
-    <div id="category-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-11/12 max-w-md">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-semibold">Add New Category</h2>
-                <button class="close-button text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none">
-                    &times;
-                </button>
-            </div>
-            <input type="text" id="new-category-input" placeholder="Category name..." class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
-            <button id="save-category-button" class="mt-4 w-full px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-                Save
-            </button>
+    <!-- Modal for Adding a New Category -->
+    <div class="modal fade" id="category-modal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="categoryModalLabel">Add New Category</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <input type="text" id="new-category-input" class="form-control" placeholder="Category name...">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" id="save-category-button" class="btn btn-primary">Save Category</button>
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- Include SortableJS via CDN -->
+    <!-- Bootstrap JS and dependencies (Popper.js) CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Include Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- SortableJS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <!-- Link to JS -->
     <script src="script.js"></script>
