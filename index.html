@@ -14,9 +14,17 @@
         <h1>Packing List</h1>
         <div class="input-container">
             <input type="text" id="new-item-input" placeholder="Add new item...">
+            <select id="category-select">
+                <option value="Clothing">Clothing</option>
+                <option value="Toiletries">Toiletries</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Miscellaneous">Miscellaneous</option>
+            </select>
             <button id="add-item-button">Add</button>
         </div>
-        <ul id="packing-list"></ul>
+        <div id="packing-list-container">
+            <!-- Categories will be dynamically inserted here -->
+        </div>
     </div>
 
     <!-- Include SortableJS via CDN -->
