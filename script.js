@@ -1,37 +1,62 @@
 document.addEventListener('DOMContentLoaded', function() {
     const packingListContainer = document.getElementById('packing-list-container');
-    const newItemInput = document.getElementById('new-item-input');
-    const addItemButton = document.getElementById('add-item-button');
-    const categorySelect = document.getElementById('category-select');
     const addCategoryButton = document.getElementById('add-category-button');
+    const resetButton = document.getElementById('reset-button');
     const categoryModal = document.getElementById('category-modal');
     const closeCategoryModalButtons = document.querySelectorAll('.close-button');
     const saveCategoryButton = document.getElementById('save-category-button');
     const newCategoryInput = document.getElementById('new-category-input');
-    const editModal = document.getElementById('edit-modal');
-    const editItemInput = document.getElementById('edit-item-input');
-    const saveEditButton = document.getElementById('save-edit-button');
 
-    // Predefined categories and items
-    const predefinedItems = [
+    // Comprehensive default items for a family with children
+    const defaultItems = [
+        // Clothing
         { id: generateUniqueId(), category: 'Clothing', name: 'T-shirts', checked: false },
-        { id: generateUniqueId(), category: 'Clothing', name: 'Jeans', checked: false },
-        { id: generateUniqueId(), category: 'Clothing', name: 'Jacket', checked: false },
+        { id: generateUniqueId(), category: 'Clothing', name: 'Jeans/Pants', checked: false },
+        { id: generateUniqueId(), category: 'Clothing', name: 'Shorts', checked: false },
+        { id: generateUniqueId(), category: 'Clothing', name: 'Sweaters/Jackets', checked: false },
+        { id: generateUniqueId(), category: 'Clothing', name: 'Socks', checked: false },
+        { id: generateUniqueId(), category: 'Clothing', name: 'Underwear', checked: false },
+        { id: generateUniqueId(), category: 'Clothing', name: 'Pajamas', checked: false },
+        { id: generateUniqueId(), category: 'Clothing', name: 'Comfortable Shoes', checked: false },
+        { id: generateUniqueId(), category: 'Clothing', name: 'Sandals/Flip-flops', checked: false },
+        // Toiletries
         { id: generateUniqueId(), category: 'Toiletries', name: 'Toothbrush', checked: false },
         { id: generateUniqueId(), category: 'Toiletries', name: 'Toothpaste', checked: false },
-        { id: generateUniqueId(), category: 'Toiletries', name: 'Shampoo', checked: false },
+        { id: generateUniqueId(), category: 'Toiletries', name: 'Shampoo & Conditioner', checked: false },
+        { id: generateUniqueId(), category: 'Toiletries', name: 'Body Wash/Soap', checked: false },
+        { id: generateUniqueId(), category: 'Toiletries', name: 'Deodorant', checked: false },
+        { id: generateUniqueId(), category: 'Toiletries', name: 'Hairbrush/Comb', checked: false },
+        { id: generateUniqueId(), category: 'Toiletries', name: 'Sunscreen', checked: false },
+        { id: generateUniqueId(), category: 'Toiletries', name: 'First Aid Kit', checked: false },
+        // Electronics
         { id: generateUniqueId(), category: 'Electronics', name: 'Phone Charger', checked: false },
-        { id: generateUniqueId(), category: 'Electronics', name: 'Headphones', checked: false },
-        { id: generateUniqueId(), category: 'Electronics', name: 'Adapter', checked: false },
-        { id: generateUniqueId(), category: 'Miscellaneous', name: 'Passport', checked: false },
+        { id: generateUniqueId(), category: 'Electronics', name: 'Portable Power Bank', checked: false },
+        { id: generateUniqueId(), category: 'Electronics', name: 'Headphones/Earbuds', checked: false },
+        { id: generateUniqueId(), category: 'Electronics', name: 'Camera & Accessories', checked: false },
+        { id: generateUniqueId(), category: 'Electronics', name: 'Travel Adapter', checked: false },
+        // Miscellaneous
+        { id: generateUniqueId(), category: 'Miscellaneous', name: 'Passport/ID', checked: false },
+        { id: generateUniqueId(), category: 'Miscellaneous', name: 'Travel Itinerary', checked: false },
+        { id: generateUniqueId(), category: 'Miscellaneous', name: 'Wallet', checked: false },
+        { id: generateUniqueId(), category: 'Miscellaneous', name: 'Sunglasses', checked: false },
+        { id: generateUniqueId(), category: 'Miscellaneous', name: 'Books/E-books', checked: false },
+        { id: generateUniqueId(), category: 'Miscellaneous', name: 'Snacks', checked: false },
+        { id: generateUniqueId(), category: 'Miscellaneous', name: 'Reusable Water Bottle', checked: false },
         { id: generateUniqueId(), category: 'Miscellaneous', name: 'Travel Pillow', checked: false },
-        { id: generateUniqueId(), category: 'Miscellaneous', name: 'Snacks', checked: false }
+        // Children's Items
+        { id: generateUniqueId(), category: 'Children', name: 'Diapers/Wipes', checked: false },
+        { id: generateUniqueId(), category: 'Children', name: 'Baby Bottles', checked: false },
+        { id: generateUniqueId(), category: 'Children', name: 'Kids’ Clothing', checked: false },
+        { id: generateUniqueId(), category: 'Children', name: 'Favorite Toys', checked: false },
+        { id: generateUniqueId(), category: 'Children', name: 'Children’s Medications', checked: false },
+        { id: generateUniqueId(), category: 'Children', name: 'Stroller/Carrier', checked: false },
+        { id: generateUniqueId(), category: 'Children', name: 'Snacks/Food', checked: false },
     ];
 
-    // Initialize items from localStorage or use predefined items
+    // Initialize items from localStorage or use default items
     let items = JSON.parse(localStorage.getItem('packingList'));
     if (!items || !Array.isArray(items)) {
-        items = predefinedItems;
+        items = defaultItems;
         updateLocalStorage();
     }
 
@@ -48,14 +73,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const categoryHeader = document.createElement('div');
             categoryHeader.className = 'category-header';
-            categoryHeader.textContent = category;
 
-            // Add delete button to category header
+            const categoryName = document.createElement('span');
+            categoryName.className = 'category-name';
+            categoryName.textContent = category;
+            categoryName.addEventListener('dblclick', () => enableCategoryEditing(categoryName, category));
+
             const deleteCategoryButton = document.createElement('button');
             deleteCategoryButton.className = 'delete-category';
             deleteCategoryButton.innerHTML = '&times;';
             deleteCategoryButton.title = 'Delete Category';
             deleteCategoryButton.addEventListener('click', () => deleteCategory(category));
+
+            categoryHeader.appendChild(categoryName);
             categoryHeader.appendChild(deleteCategoryButton);
 
             const list = document.createElement('ul');
@@ -101,7 +131,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const label = document.createElement('label');
         label.textContent = item.name;
-        label.addEventListener('click', () => openEditModal(item.id, item.name));
+        label.className = 'editable';
+        label.addEventListener('dblclick', () => enableItemEditing(label, item));
 
         listItem.appendChild(dragHandle);
         listItem.appendChild(checkbox);
@@ -165,19 +196,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateLocalStorage();
     }
 
-    // Add a new item globally (Not used now)
-    function addItem() {
-        const itemName = newItemInput.value.trim();
-        const category = categorySelect.value;
-        if (itemName) {
-            const newItem = { id: generateUniqueId(), category, name: itemName, checked: false };
-            items.push(newItem);
-            newItemInput.value = '';
-            updateLocalStorage();
-            renderList();
-        }
-    }
-
     // Add a new item to a specific category
     function addItemToCategory(category) {
         const itemName = prompt(`Add a new item to "${category}":`);
@@ -199,7 +217,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close modals
     function closeModals() {
         categoryModal.style.display = 'none';
-        editModal.style.display = 'none';
     }
 
     // Save new category
@@ -226,26 +243,83 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Open edit modal
-    let currentEditItemId = null;
-    function openEditModal(id, currentName) {
-        currentEditItemId = id;
-        editModal.style.display = 'block';
-        editItemInput.value = currentName;
-        editItemInput.focus();
+    // Enable inline editing for items
+    function enableItemEditing(label, item) {
+        const currentText = label.textContent;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = currentText;
+        input.className = 'edit-input';
+        label.replaceWith(input);
+        input.focus();
+
+        input.addEventListener('blur', () => saveItemEditing(input, item));
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                saveItemEditing(input, item);
+            }
+        });
     }
 
     // Save edited item
-    function saveEditedItem() {
-        const newName = editItemInput.value.trim();
-        if (newName && currentEditItemId) {
-            items = items.map(item => item.id === currentEditItemId ? { ...item, name: newName } : item);
+    function saveItemEditing(input, item) {
+        const newName = input.value.trim();
+        if (newName !== '') {
+            item.name = newName;
             updateLocalStorage();
             renderList();
-            editModal.style.display = 'none';
-            currentEditItemId = null;
         } else {
             alert('Item name cannot be empty.');
+            renderList();
+        }
+    }
+
+    // Enable inline editing for categories
+    function enableCategoryEditing(span, category) {
+        const currentName = span.textContent;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = currentName;
+        input.className = 'edit-input';
+        span.replaceWith(input);
+        input.focus();
+
+        input.addEventListener('blur', () => saveCategoryEditing(input, category));
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                saveCategoryEditing(input, category);
+            }
+        });
+    }
+
+    // Save edited category
+    function saveCategoryEditing(input, oldCategory) {
+        const newCategory = input.value.trim();
+        if (newCategory && !categories.includes(newCategory)) {
+            // Update category name in items
+            items.forEach(item => {
+                if (item.category === oldCategory) {
+                    item.category = newCategory;
+                }
+            });
+            // Update categories list
+            categories = categories.map(cat => cat === oldCategory ? newCategory : cat);
+            updateLocalStorage();
+            renderList();
+        } else {
+            alert('Category name cannot be empty or already exists.');
+            renderList();
+        }
+    }
+
+    // Reset to default items
+    function resetToDefault() {
+        const confirmReset = confirm('Are you sure you want to reset the packing list to its default state? This will delete all your current items and categories.');
+        if (confirmReset) {
+            items = defaultItems;
+            categories = [...new Set(items.map(item => item.category))];
+            updateLocalStorage();
+            renderList();
         }
     }
 
@@ -260,13 +334,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Event Listeners
-    addItemButton.addEventListener('click', addItem); // May not be used if per-category add buttons are used
-    newItemInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            addItem();
-        }
-    });
-
     addCategoryButton.addEventListener('click', openAddCategoryModal);
 
     closeCategoryModalButtons.forEach(button => {
@@ -274,20 +341,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     window.addEventListener('click', function(event) {
-        if (event.target === categoryModal || event.target === editModal) {
+        if (event.target === categoryModal) {
             closeModals();
         }
     });
 
     saveCategoryButton.addEventListener('click', saveNewCategory);
 
-    saveEditButton.addEventListener('click', saveEditedItem);
-
-    editItemInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            saveEditedItem();
-        }
-    });
+    resetButton.addEventListener('click', resetToDefault);
 
     // Initialize the list on load
     renderList();
