@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const packingList = document.getElementById('packing-list');
+    const packingListContainer = document.getElementById('packing-list-container');
     const newItemInput = document.getElementById('new-item-input');
     const addItemButton = document.getElementById('add-item-button');
+    const categorySelect = document.getElementById('category-select');
 
     // Predefined categories and items
     const predefinedItems = [
@@ -26,88 +27,143 @@ document.addEventListener('DOMContentLoaded', function() {
         updateLocalStorage();
     }
 
-    function renderList() {
-        packingList.innerHTML = '';
-        let currentCategory = '';
-        items.forEach((item, index) => {
-            if (item.category !== currentCategory) {
-                currentCategory = item.category;
-                const categoryHeader = document.createElement('li');
-                categoryHeader.className = 'category-header';
-                categoryHeader.textContent = currentCategory;
-                packingList.appendChild(categoryHeader);
-            }
+    // Extract unique categories
+    const categories = [...new Set(items.map(item => item.category))];
 
-            const listItem = document.createElement('li');
-            listItem.className = 'list-item';
-            listItem.setAttribute('data-id', index);
+    // Initialize categories in the DOM
+    function initializeCategories() {
+        packingListContainer.innerHTML = '';
+        categories.forEach(category => {
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = 'category';
+            categoryDiv.dataset.category = category;
 
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = item.checked;
-            checkbox.onchange = () => toggleItem(index);
+            const categoryHeader = document.createElement('div');
+            categoryHeader.className = 'category-header';
+            categoryHeader.textContent = category;
 
-            const label = document.createElement('label');
-            label.textContent = item.name;
+            const list = document.createElement('ul');
+            list.className = 'sortable-list';
+            list.dataset.category = category;
 
-            listItem.appendChild(checkbox);
-            listItem.appendChild(label);
-
-            packingList.appendChild(listItem);
+            categoryDiv.appendChild(categoryHeader);
+            categoryDiv.appendChild(list);
+            packingListContainer.appendChild(categoryDiv);
         });
     }
 
+    // Render items into their respective categories
+    function renderList() {
+        initializeCategories();
+        categories.forEach(category => {
+            const list = document.querySelector(`ul[data-category="${category}"]`);
+            const categoryItems = items.filter(item => item.category === category);
+            categoryItems.forEach((item, index) => {
+                const listItem = document.createElement('li');
+                listItem.className = 'list-item';
+                listItem.dataset.id = getItemId(item);
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = item.checked;
+                checkbox.addEventListener('change', () => toggleItem(item.id));
+
+                const label = document.createElement('label');
+                label.textContent = item.name;
+                label.addEventListener('click', () => toggleItem(item.id));
+
+                listItem.appendChild(checkbox);
+                listItem.appendChild(label);
+                list.appendChild(listItem);
+            });
+        });
+        initializeSortable();
+    }
+
+    // Generate a unique ID for each item
+    function getItemId(item) {
+        return `${item.category}-${item.name}-${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    // Toggle item's checked status
+    function toggleItem(id) {
+        items = items.map(item => {
+            const currentId = `${item.category}-${item.name}-${item.idSuffix || ''}`;
+            if (currentId.startsWith(id.slice(0, id.indexOf('-')))) {
+                return { ...item, checked: !item.checked };
+            }
+            return item;
+        });
+        updateLocalStorage();
+        renderList();
+    }
+
+    // Add a new item
     function addItem() {
         const itemName = newItemInput.value.trim();
+        const category = categorySelect.value;
         if (itemName) {
-            // For simplicity, assign new items to 'Miscellaneous' category
-            items.push({ category: 'Miscellaneous', name: itemName, checked: false });
+            const newItem = { category, name: itemName, checked: false, idSuffix: Math.random().toString(36).substr(2, 9) };
+            items.push(newItem);
             newItemInput.value = '';
             updateLocalStorage();
             renderList();
-            sortable.destroy(); // Destroy existing Sortable instance
-            initializeSortable(); // Re-initialize Sortable
         }
     }
 
-    function toggleItem(index) {
-        items[index].checked = !items[index].checked;
-        updateLocalStorage();
-    }
-
+    // Update localStorage
     function updateLocalStorage() {
         localStorage.setItem('packingList', JSON.stringify(items));
     }
 
+    // Initialize SortableJS for all lists
+    function initializeSortable() {
+        const sortableLists = document.querySelectorAll('.sortable-list');
+        sortableLists.forEach(list => {
+            if (list.sortable) return; // Prevent initializing multiple times
+
+            Sortable.create(list, {
+                group: 'shared', // To allow dragging between lists
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                onAdd: function (evt) {
+                    const itemId = evt.item.dataset.id;
+                    const newCategory = evt.to.dataset.category;
+                    const item = items.find(it => it.idSuffix === itemId.split('-').pop());
+                    if (item) {
+                        item.category = newCategory;
+                        updateLocalStorage();
+                        renderList();
+                    }
+                },
+                onUpdate: function (evt) {
+                    const category = evt.to.dataset.category;
+                    const newIndex = evt.newIndex;
+                    const movedItem = items.find(it => it.idSuffix === evt.item.dataset.id.split('-').pop());
+                    if (movedItem) {
+                        // Remove the item from its current position
+                        items = items.filter(it => it !== movedItem);
+                        // Insert the item at the new position within the same category
+                        const categoryItems = items.filter(it => it.category === category);
+                        items.splice(newIndex, 0, movedItem);
+                        updateLocalStorage();
+                        renderList();
+                    }
+                }
+            });
+        });
+    }
+
+    // Initialize the app
+    renderList();
+
+    // Event listeners
     addItemButton.addEventListener('click', addItem);
     newItemInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             addItem();
         }
     });
-
-    // Initialize SortableJS
-    function initializeSortable() {
-        Sortable.create(packingList, {
-            animation: 150,
-            handle: '.list-item',
-            onEnd: function (evt) {
-                // Update items array based on new order
-                const movedItem = items.splice(evt.oldIndex - countCategoryHeaders(evt.oldIndex), 1)[0];
-                const newIndex = evt.newIndex - countCategoryHeaders(evt.newIndex);
-                items.splice(newIndex, 0, movedItem);
-                updateLocalStorage();
-                renderList();
-                initializeSortable(); // Re-initialize after re-rendering
-            }
-        });
-    }
-
-    // Helper function to count category headers before a given index
-    function countCategoryHeaders(index) {
-        return items.slice(0, index).filter(item => item.category).length;
-    }
-
-    renderList();
-    initializeSortable();
 });
