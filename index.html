@@ -12,20 +12,13 @@
 <body>
     <div class="app-container">
         <h1>Packing List</h1>
-        <div class="input-container">
-            <input type="text" id="new-item-input" placeholder="Add new item...">
-            <select id="category-select">
-                <option value="Clothing">Clothing</option>
-                <option value="Toiletries">Toiletries</option>
-                <option value="Electronics">Electronics</option>
-                <option value="Miscellaneous">Miscellaneous</option>
-            </select>
-            <button id="add-item-button">Add</button>
-        </div>
         <div id="packing-list-container">
             <!-- Categories will be dynamically inserted here -->
         </div>
-        <button id="add-category-button" class="add-category-button">+ Add Category</button>
+        <div class="controls">
+            <button id="add-category-button" class="add-category-button">+ Add Category</button>
+            <button id="reset-button" class="reset-button">⟳ Reset to Default</button>
+        </div>
     </div>
 
     <!-- Modal for adding a new category -->
@@ -35,16 +28,6 @@
             <h2>Add New Category</h2>
             <input type="text" id="new-category-input" placeholder="Category name...">
             <button id="save-category-button">Save</button>
-        </div>
-    </div>
-
-    <!-- Modal for editing an item -->
-    <div id="edit-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Edit Item</h2>
-            <input type="text" id="edit-item-input" placeholder="Item name...">
-            <button id="save-edit-button">Save</button>
         </div>
     </div>
 
