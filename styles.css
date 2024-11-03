@@ -1,14 +1,33 @@
-/* Tailwind CSS handles most of the styling */
+/* Custom Styles */
 
-/* Optional: Custom styles for specific components */
-.editable-input {
-    @apply w-full px-2 py-1 border border-blue-300 rounded;
+/* Dark Mode Styles */
+body.dark-mode {
+    background-color: #121212;
+    color: #e0e0e0;
 }
 
-.editable-input:focus {
-    @apply outline-none ring-2 ring-blue-300;
+body.dark-mode .accordion-button {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
 }
 
-.list-item {
-    @apply flex items-center space-x-4;
+body.dark-mode .accordion-button:not(.collapsed) {
+    background-color: #333333;
+}
+
+body.dark-mode .modal-content {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+}
+
+body.dark-mode .btn-close {
+    filter: invert(1);
+}
+
+.list-item:hover {
+    background-color: #f8f9fa;
+}
+
+body.dark-mode .list-item:hover {
+    background-color: #2c2c2c;
 }
