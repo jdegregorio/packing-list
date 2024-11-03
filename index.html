@@ -25,6 +25,27 @@
         <div id="packing-list-container">
             <!-- Categories will be dynamically inserted here -->
         </div>
+        <button id="add-category-button" class="add-category-button">+ Add Category</button>
+    </div>
+
+    <!-- Modal for adding a new category -->
+    <div id="category-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Add New Category</h2>
+            <input type="text" id="new-category-input" placeholder="Category name...">
+            <button id="save-category-button">Save</button>
+        </div>
+    </div>
+
+    <!-- Modal for editing an item -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Edit Item</h2>
+            <input type="text" id="edit-item-input" placeholder="Item name...">
+            <button id="save-edit-button">Save</button>
+        </div>
     </div>
 
     <!-- Include SortableJS via CDN -->
