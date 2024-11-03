@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeCategoryModalButtons = document.querySelectorAll('.close-button');
     const saveCategoryButton = document.getElementById('save-category-button');
     const newCategoryInput = document.getElementById('new-category-input');
+    const themeToggleButton = document.getElementById('theme-toggle');
+    const sunIcon = document.getElementById('sun-icon');
+    const moonIcon = document.getElementById('moon-icon');
 
     // Comprehensive default items for a family with children
     const defaultItems = [
@@ -75,12 +78,13 @@ document.addEventListener('DOMContentLoaded', function() {
             categoryHeader.className = 'category-header';
 
             const categoryName = document.createElement('span');
-            categoryName.className = 'category-name';
+            categoryName.className = 'category-name text-lg font-medium';
             categoryName.textContent = category;
+            categoryName.title = 'Double-click to edit';
             categoryName.addEventListener('dblclick', () => enableCategoryEditing(categoryName, category));
 
             const deleteCategoryButton = document.createElement('button');
-            deleteCategoryButton.className = 'delete-category';
+            deleteCategoryButton.className = 'delete-category text-red-500 hover:text-red-700';
             deleteCategoryButton.innerHTML = '&times;';
             deleteCategoryButton.title = 'Delete Category';
             deleteCategoryButton.addEventListener('click', () => deleteCategory(category));
@@ -89,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
             categoryHeader.appendChild(deleteCategoryButton);
 
             const list = document.createElement('ul');
-            list.className = 'sortable-list';
+            list.className = 'sortable-list mt-4 space-y-2';
             list.dataset.category = category;
 
             // Add items to the list
@@ -100,10 +104,11 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             // Add "Add item" button
-            const addItemButton = document.createElement('div');
-            addItemButton.className = 'add-item-button';
-            addItemButton.innerHTML = '+';
-            addItemButton.title = 'Add Item';
+            const addItemButton = document.createElement('button');
+            addItemButton.className = 'add-item-button flex items-center justify-center w-full mt-4 px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition';
+            addItemButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg> Add Item';
             addItemButton.addEventListener('click', () => addItemToCategory(category));
 
             categoryDiv.appendChild(categoryHeader);
@@ -117,21 +122,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Create a list item element
     function createListItem(item) {
         const listItem = document.createElement('li');
-        listItem.className = 'list-item';
+        listItem.className = 'list-item flex items-center space-x-4 bg-white dark:bg-gray-800 p-2 rounded shadow';
         listItem.dataset.id = item.id;
 
         const dragHandle = document.createElement('span');
-        dragHandle.className = 'drag-handle';
+        dragHandle.className = 'drag-handle cursor-grab text-gray-500 dark:text-gray-400';
         dragHandle.innerHTML = '&#9776;'; // Hamburger icon
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.checked = item.checked;
+        checkbox.className = 'form-checkbox h-5 w-5 text-blue-600';
         checkbox.addEventListener('change', () => toggleItemChecked(item.id));
 
         const label = document.createElement('label');
         label.textContent = item.name;
-        label.className = 'editable';
+        label.className = 'flex-1 cursor-pointer';
+        label.title = 'Double-click to edit';
         label.addEventListener('dblclick', () => enableItemEditing(label, item));
 
         listItem.appendChild(dragHandle);
@@ -157,9 +164,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 group: 'shared',
                 animation: 150,
                 handle: '.drag-handle',
-                ghostClass: 'sortable-ghost',
-                chosenClass: 'sortable-chosen',
-                dragClass: 'sortable-drag',
+                ghostClass: 'bg-gray-200 dark:bg-gray-700 opacity-75',
+                chosenClass: 'bg-gray-100 dark:bg-gray-800',
+                dragClass: 'bg-gray-300 dark:bg-gray-600',
                 onEnd: function(evt) {
                     const itemId = evt.item.dataset.id;
                     const newCategory = evt.to.dataset.category;
@@ -209,14 +216,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add a new category via modal
     function openAddCategoryModal() {
-        categoryModal.style.display = 'block';
-        newCategoryInput.value = '';
-        newCategoryInput.focus();
+        categoryModal.classList.remove('hidden');
     }
 
     // Close modals
     function closeModals() {
-        categoryModal.style.display = 'none';
+        categoryModal.classList.add('hidden');
     }
 
     // Save new category
@@ -226,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
             categories.push(newCategory);
             updateLocalStorage();
             renderList();
-            categoryModal.style.display = 'none';
+            categoryModal.classList.add('hidden');
         } else {
             alert('Category name is empty or already exists.');
         }
@@ -249,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const input = document.createElement('input');
         input.type = 'text';
         input.value = currentText;
-        input.className = 'edit-input';
+        input.className = 'editable-input';
         label.replaceWith(input);
         input.focus();
 
@@ -280,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const input = document.createElement('input');
         input.type = 'text';
         input.value = currentName;
-        input.className = 'edit-input';
+        input.className = 'editable-input';
         span.replaceWith(input);
         input.focus();
 
@@ -333,6 +338,36 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('packingList', JSON.stringify(items));
     }
 
+    // Theme Toggle
+    function toggleTheme() {
+        const html = document.documentElement;
+        if (html.classList.contains('dark')) {
+            html.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+        } else {
+            html.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+            sunIcon.classList.remove('hidden');
+            moonIcon.classList.add('hidden');
+        }
+    }
+
+    function loadTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        const html = document.documentElement;
+        if (savedTheme === 'dark') {
+            html.classList.add('dark');
+            sunIcon.classList.remove('hidden');
+            moonIcon.classList.add('hidden');
+        } else {
+            html.classList.remove('dark');
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+        }
+    }
+
     // Event Listeners
     addCategoryButton.addEventListener('click', openAddCategoryModal);
 
@@ -350,6 +385,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     resetButton.addEventListener('click', resetToDefault);
 
+    themeToggleButton.addEventListener('click', toggleTheme);
+
     // Initialize the list on load
     renderList();
+    loadTheme();
 });
