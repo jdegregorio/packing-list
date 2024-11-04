@@ -4,36 +4,66 @@
     <meta charset="UTF-8">
     <title>Packing List App</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Link to CSS -->
+    <!-- Import Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <!-- Import Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Import Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="styles.css">
     <!-- Manifest for PWA -->
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
-    <div class="app-container">
-        <h1>Packing List</h1>
+    <!-- Navbar -->
+    <nav class="teal darken-2">
+        <div class="nav-wrapper container">
+            <a href="#" class="brand-logo center">Packing List</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container" id="app-container">
+        <!-- Packing List Container -->
         <div id="packing-list-container">
             <!-- Categories will be dynamically inserted here -->
         </div>
-        <div class="controls">
-            <button id="add-category-button" class="add-category-button">+ Add Category</button>
-            <button id="reset-button" class="reset-button">⟳ Reset to Default</button>
+
+        <!-- Add Category and Reset Buttons -->
+        <div class="fixed-action-btn">
+            <a class="btn-floating btn-large teal darken-2">
+                <i class="large material-icons">add</i>
+            </a>
+            <ul>
+                <li><a id="reset-button" class="btn-floating red tooltipped" data-tooltip="Reset to Default"><i class="material-icons">refresh</i></a></li>
+                <li><a id="add-category-button" class="btn-floating blue tooltipped" data-tooltip="Add Category"><i class="material-icons">playlist_add</i></a></li>
+            </ul>
         </div>
     </div>
 
-    <!-- Modal for adding a new category -->
+    <!-- Modals -->
+    <!-- Add Category Modal -->
     <div id="category-modal" class="modal">
         <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Add New Category</h2>
-            <input type="text" id="new-category-input" placeholder="Category name...">
-            <button id="save-category-button">Save</button>
+            <h4>Add New Category</h4>
+            <div class="input-field">
+                <input id="new-category-input" type="text">
+                <label for="new-category-input">Category Name</label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" id="save-category-button" class="modal-close waves-effect waves-green btn-flat">Save</a>
         </div>
     </div>
+
+    <!-- Include jQuery and Materialize JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
     <!-- Include SortableJS via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    <!-- Link to JS -->
+    <!-- Custom JS -->
     <script src="script.js"></script>
     <!-- Register Service Worker -->
     <script>
@@ -43,6 +73,11 @@
                 console.log('Service Worker Registered');
             });
         }
+
+        // Initialize Materialize Components
+        document.addEventListener('DOMContentLoaded', function() {
+            M.AutoInit();
+        });
     </script>
 </body>
 </html>
