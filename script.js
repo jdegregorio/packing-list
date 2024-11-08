@@ -3,22 +3,37 @@ document.addEventListener('DOMContentLoaded', function() {
     M.AutoInit();
 
     const packingListContainer = document.getElementById('packing-list-container');
+    const newItemInput = document.getElementById('new-item-input');
+    const addItemButton = document.getElementById('add-item-button');
+    const categorySelect = document.getElementById('category-select');
     const addCategoryButton = document.getElementById('add-category-button');
-    const resetButton = document.getElementById('reset-button');
     const categoryModal = document.getElementById('category-modal');
     const saveCategoryButton = document.getElementById('save-category-button');
     const newCategoryInput = document.getElementById('new-category-input');
-    const categoryModalInstance = M.Modal.init(categoryModal);
+    const editModal = document.getElementById('edit-modal');
+    const editItemInput = document.getElementById('edit-item-input');
+    const saveEditButton = document.getElementById('save-edit-button');
 
-    // Comprehensive default items for a family with children
-    const defaultItems = [
-        // (Same as before, but you can add more items or categories as needed)
+    // Predefined categories and items
+    const predefinedItems = [
+        { id: generateUniqueId(), category: 'Clothing', name: 'T-shirts', checked: false },
+        { id: generateUniqueId(), category: 'Clothing', name: 'Jeans', checked: false },
+        { id: generateUniqueId(), category: 'Clothing', name: 'Jacket', checked: false },
+        { id: generateUniqueId(), category: 'Toiletries', name: 'Toothbrush', checked: false },
+        { id: generateUniqueId(), category: 'Toiletries', name: 'Toothpaste', checked: false },
+        { id: generateUniqueId(), category: 'Toiletries', name: 'Shampoo', checked: false },
+        { id: generateUniqueId(), category: 'Electronics', name: 'Phone Charger', checked: false },
+        { id: generateUniqueId(), category: 'Electronics', name: 'Headphones', checked: false },
+        { id: generateUniqueId(), category: 'Electronics', name: 'Adapter', checked: false },
+        { id: generateUniqueId(), category: 'Miscellaneous', name: 'Passport', checked: false },
+        { id: generateUniqueId(), category: 'Miscellaneous', name: 'Travel Pillow', checked: false },
+        { id: generateUniqueId(), category: 'Miscellaneous', name: 'Snacks', checked: false }
     ];
 
-    // Initialize items from localStorage or use default items
+    // Initialize items from localStorage or use predefined items
     let items = JSON.parse(localStorage.getItem('packingList'));
     if (!items || !Array.isArray(items)) {
-        items = defaultItems;
+        items = predefinedItems;
         updateLocalStorage();
     }
 
@@ -35,25 +50,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const categoryHeader = document.createElement('div');
             categoryHeader.className = 'category-header';
+            categoryHeader.textContent = category;
 
-            const categoryTitle = document.createElement('span');
-            categoryTitle.className = 'category-title';
-            categoryTitle.textContent = category;
-            categoryTitle.addEventListener('dblclick', () => enableCategoryEditing(categoryTitle, category));
-
-            const categoryActions = document.createElement('div');
-            categoryActions.className = 'category-actions';
-
-            const deleteCategoryIcon = document.createElement('i');
-            deleteCategoryIcon.className = 'material-icons';
-            deleteCategoryIcon.textContent = 'delete';
-            deleteCategoryIcon.title = 'Delete Category';
-            deleteCategoryIcon.addEventListener('click', () => deleteCategory(category));
-
-            categoryActions.appendChild(deleteCategoryIcon);
-
-            categoryHeader.appendChild(categoryTitle);
-            categoryHeader.appendChild(categoryActions);
+            // Add delete button to category header
+            const deleteCategoryButton = document.createElement('button');
+            deleteCategoryButton.className = 'delete-category';
+            deleteCategoryButton.innerHTML = '&times;';
+            deleteCategoryButton.title = 'Delete Category';
+            deleteCategoryButton.addEventListener('click', () => deleteCategory(category));
+            categoryHeader.appendChild(deleteCategoryButton);
 
             const list = document.createElement('ul');
             list.className = 'collection sortable-list';
@@ -90,18 +95,14 @@ document.addEventListener('DOMContentLoaded', function() {
         dragHandle.className = 'material-icons';
         dragHandle.textContent = 'drag_handle';
 
-        const checkbox = document.createElement('label');
-        const input = document.createElement('input');
-        input.type = 'checkbox';
-        input.checked = item.checked;
-        input.addEventListener('change', () => toggleItemChecked(item.id));
-        const span = document.createElement('span');
-        span.className = 'checkbox-label';
-        span.textContent = item.name;
-        span.addEventListener('dblclick', () => enableItemEditing(span, item));
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = item.checked;
+        checkbox.addEventListener('change', () => toggleItemChecked(item.id));
 
-        checkbox.appendChild(input);
-        checkbox.appendChild(span);
+        const label = document.createElement('label');
+        label.textContent = item.name;
+        label.addEventListener('click', () => openEditModal(item.id, item.name));
 
         listItem.appendChild(dragHandle);
         listItem.appendChild(checkbox);
@@ -164,6 +165,30 @@ document.addEventListener('DOMContentLoaded', function() {
         updateLocalStorage();
     }
 
+    // Add a new item globally (Not used now)
+    function addItem() {
+        const itemName = newItemInput.value.trim();
+        const category = categorySelect.value;
+        if (itemName) {
+            const newItem = { id: generateUniqueId(), category, name: itemName, checked: false };
+            items.push(newItem);
+            newItemInput.value = '';
+            updateLocalStorage();
+            renderList();
+        }
+    }
+
+    // Add a new item to a specific category
+    function addItemToCategory(category) {
+        const itemName = prompt(`Add a new item to "${category}":`);
+        if (itemName && itemName.trim() !== '') {
+            const newItem = { id: generateUniqueId(), category, name: itemName.trim(), checked: false };
+            items.push(newItem);
+            updateLocalStorage();
+            renderList();
+        }
+    }
+
     // Add a new item to a specific category
     function addItemToCategory(category) {
         M.Modal.getInstance(document.getElementById('add-item-modal')).open();
@@ -172,7 +197,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add a new category via modal
     function openAddCategoryModal() {
-        categoryModalInstance.open();
+        categoryModal.style.display = 'block';
+        newCategoryInput.value = '';
+        newCategoryInput.focus();
+    }
+
+    // Close modals
+    function closeModals() {
+        categoryModal.style.display = 'none';
+        editModal.style.display = 'none';
     }
 
     // Save new category
@@ -199,82 +232,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Enable inline editing for items
-    function enableItemEditing(span, item) {
-        const currentText = span.textContent;
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = currentText;
-        input.className = 'editable-input';
-        span.replaceWith(input);
-        input.focus();
-
-        input.addEventListener('blur', () => saveItemEditing(input, item));
-        input.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                saveItemEditing(input, item);
-            }
-        });
+    // Open edit modal
+    let currentEditItemId = null;
+    function openEditModal(id, currentName) {
+        currentEditItemId = id;
+        editModal.style.display = 'block';
+        editItemInput.value = currentName;
+        editItemInput.focus();
     }
 
     // Save edited item
-    function saveItemEditing(input, item) {
-        const newName = input.value.trim();
-        if (newName !== '') {
-            item.name = newName;
+    function saveEditedItem() {
+        const newName = editItemInput.value.trim();
+        if (newName && currentEditItemId) {
+            items = items.map(item => item.id === currentEditItemId ? { ...item, name: newName } : item);
             updateLocalStorage();
             renderList();
+            editModal.style.display = 'none';
+            currentEditItemId = null;
         } else {
-            M.toast({html: 'Item name cannot be empty.'});
-            renderList();
-        }
-    }
-
-    // Enable inline editing for categories
-    function enableCategoryEditing(span, category) {
-        const currentName = span.textContent;
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = currentName;
-        input.className = 'editable-input';
-        span.replaceWith(input);
-        input.focus();
-
-        input.addEventListener('blur', () => saveCategoryEditing(input, category));
-        input.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                saveCategoryEditing(input, category);
-            }
-        });
-    }
-
-    // Save edited category
-    function saveCategoryEditing(input, oldCategory) {
-        const newCategory = input.value.trim();
-        if (newCategory && !categories.includes(newCategory)) {
-            // Update category name in items
-            items.forEach(item => {
-                if (item.category === oldCategory) {
-                    item.category = newCategory;
-                }
-            });
-            // Update categories list
-            categories = categories.map(cat => cat === oldCategory ? newCategory : cat);
-            updateLocalStorage();
-            renderList();
-        } else {
-            M.toast({html: 'Category name cannot be empty or already exists.'});
-            renderList();
-        }
-    }
-
-    // Reset to default items
-    function resetToDefault() {
-        if (confirm('Are you sure you want to reset the packing list to its default state? This will delete all your current items and categories.')) {
-            items = defaultItems;
-            categories = [...new Set(items.map(item => item.category))];
-            updateLocalStorage();
-            renderList();
+            alert('Item name cannot be empty.');
         }
     }
 
@@ -289,9 +266,34 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Event Listeners
+    addItemButton.addEventListener('click', addItem); // May not be used if per-category add buttons are used
+    newItemInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            addItem();
+        }
+    });
+
     addCategoryButton.addEventListener('click', openAddCategoryModal);
+
+    closeCategoryModalButtons.forEach(button => {
+        button.addEventListener('click', closeModals);
+    });
+
+    window.addEventListener('click', function(event) {
+        if (event.target === categoryModal || event.target === editModal) {
+            closeModals();
+        }
+    });
+
     saveCategoryButton.addEventListener('click', saveNewCategory);
-    resetButton.addEventListener('click', resetToDefault);
+
+    saveEditButton.addEventListener('click', saveEditedItem);
+
+    editItemInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            saveEditedItem();
+        }
+    });
 
     // Initialize the list on load
     renderList();
